@@ -98,6 +98,18 @@
     de: { title: n => n ? `Schreib in ${n}s Freundebuch` : 'Schreib ins Freundebuch', lead: 'Füll die Felder aus, ein Foto geht auch. Dann „Zurückschicken“ – daraus wird ein Bild.', photo: '+ Foto einfügen', photoChange: 'Foto ändern',
           send: 'Zurückschicken (Bild machen)', sendHint: 'Nichts wird hochgeladen. Das Bild entsteht direkt auf deinem Handy.', done: 'Fertig! Wenn sich das Teilen-Fenster nicht öffnet, halte das Bild gedrückt, um es zu speichern.', dl: 'Bild speichern', font: 'Schrift',
           foot: 'Gemacht mit MemoFly.<br>Eigenes Freundebuch anlegen und Freunde schreiben lassen →', app: 'App Store', lang: 'Sprache', to: 'Für' },
+    ko: { title: n => n ? `${n}의 프로필북에 써 줘` : '프로필북에 써 줘', lead: '빈칸을 채우고 사진도 붙일 수 있어요. 다 되면 "돌려보내기"로 이미지로 만들어서 보내 주세요.', photo: '+ 사진 붙이기', photoChange: '사진 바꾸기',
+          send: '돌려보내기 (이미지로 만들기)', sendHint: '쓴 내용은 어디에도 업로드되지 않아요. 이미지는 이 화면 안에서 만들어져요.', done: '이미지가 완성됐어요. 공유 화면이 안 뜨면 이미지를 길게 눌러 저장하세요.', dl: '이미지 저장', font: '글꼴',
+          foot: 'MemoFly로 만들었어요.<br>나만의 프로필북을 만들고 친구에게 써 달라고 하기 →', app: 'App Store', lang: '언어', to: 'To' },
+    es: { title: n => n ? `Rellena la ficha de ${n}` : 'Rellena una ficha de perfil', lead: 'Rellena los huecos y añade una foto. Toca «Devolver» para convertirla en imagen y compartirla.', photo: '+ Añadir foto', photoChange: 'Cambiar foto',
+          send: 'Devolver (crear imagen)', sendHint: 'No se sube nada. La imagen se crea aquí mismo, en tu móvil.', done: 'Tu ficha está lista. Si no se abrió la ventana de compartir, mantén pulsada la imagen para guardarla.', dl: 'Guardar imagen', font: 'Letra',
+          foot: 'Hecho con MemoFly.<br>Crea tu propia ficha y que tus amigos la rellenen →', app: 'App Store', lang: 'Idioma', to: 'Para' },
+    fr: { title: n => n ? `Remplis la fiche de ${n}` : 'Remplis une fiche de profil', lead: 'Remplis les cases et ajoute une photo. Touche « Renvoyer » pour en faire une image et la partager.', photo: '+ Ajouter une photo', photoChange: 'Changer la photo',
+          send: 'Renvoyer (créer l’image)', sendHint: 'Rien n’est envoyé nulle part. L’image est créée ici, sur ton téléphone.', done: 'Ta fiche est prête. Si la fenêtre de partage ne s’est pas ouverte, appuie longuement sur l’image pour l’enregistrer.', dl: 'Enregistrer l’image', font: 'Police',
+          foot: 'Fait avec MemoFly.<br>Crée ta propre fiche et fais-la remplir par tes amis →', app: 'App Store', lang: 'Langue', to: 'Pour' },
+    pt: { title: n => n ? `Preencha a ficha de ${n}` : 'Preencha uma ficha de perfil', lead: 'Preencha os espaços e adicione uma foto. Toque em “Devolver” para transformar em imagem e compartilhar.', photo: '+ Adicionar foto', photoChange: 'Trocar foto',
+          send: 'Devolver (criar imagem)', sendHint: 'Nada é enviado para lugar nenhum. A imagem é criada aqui mesmo, no seu celular.', done: 'Sua ficha está pronta. Se a tela de compartilhar não abriu, segure a imagem para salvar.', dl: 'Salvar imagem', font: 'Fonte',
+          foot: 'Feito com MemoFly.<br>Crie sua própria ficha e peça para os amigos preencherem →', app: 'App Store', lang: 'Idioma', to: 'Para' },
   };
   const nav = (navigator.language || 'en').slice(0, 2).toLowerCase();
   const q = new URLSearchParams(location.search);
@@ -123,13 +135,14 @@
   } catch (e) {
     $('form').innerHTML = `<div class="err">cards.json</div>`; return;
   }
+  const cardName = c => uiLang === 'ja' ? c.name : ((data.names || {})[c.id] || {})[uiLang] || ((data.names || {})[c.id] || {}).en || c.name;
   // URL にカードの指定がないとき（プレビュー用）は、上に選ぶ欄を出す
   const hashQ = new URLSearchParams(location.hash.replace(/^#/, '').replace(/;/g, '&'));
   const cardId = q.get('c') || hashQ.get('c');
   if (!cardId) {
     const sel = document.createElement('select');
     sel.style.cssText = 'font:inherit;font-size:14px;padding:8px 10px;border-radius:10px;border:1.5px solid #e6e1e8;margin:0 0 10px;max-width:100%';
-    for (const c of data.cards) { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name; sel.appendChild(o); }
+    for (const c of data.cards) { const o = document.createElement('option'); o.value = c.id; o.textContent = cardName(c); sel.appendChild(o); }
     sel.onchange = () => { location.search = '?c=' + sel.value + (to ? '&to=' + encodeURIComponent(to) : ''); };
     $('lead').after(sel);
   }
@@ -155,6 +168,10 @@
   // 項目名を重ねるカード（ドイツ）の項目名の言語
   let labelLang = card.langs ? (card.langs.includes(uiLang) ? uiLang : (card.langs.includes('en') ? 'en' : card.langs[0])) : card.lang;
   const label = key => (data.labels[labelLang] || {})[key] || (data.labels.en || {})[key] || key;
+  // 書く人の言語での項目名（印刷済みのカード）。日本語ならそのまま
+  const bl = s => uiLang === 'ja' ? s : ((data.blankLabels || {})[s] || {})[uiLang] || ((data.blankLabels || {})[s] || {}).en || s;
+  // 書く人の言語でのヒント（項目名を重ねるカードで、印刷する言語と違うとき）
+  const hint = key => (uiLang !== labelLang && (data.labels[uiLang] || {})[key]) || '';
 
   const values = {};
   let photo = null;   // Image
@@ -162,7 +179,7 @@
   // ---------- 入力欄 ----------
   const form = $('form');
   const items = card.blanks
-    ? card.blanks.map(b => ({ key: b.key, label: b.label, kind: b.kind, options: b.options && b.options.map(o => o.value), max: b.kind === 'area' ? Math.max(48, (b.lines || 2) * 36) : 24 }))
+    ? card.blanks.map(b => ({ key: b.key, label: bl(b.label), kind: b.kind, options: b.options && b.options.map(o => o.value), optionLabels: b.options && b.options.map(o => bl(o.value)), max: b.kind === 'area' ? Math.max(48, (b.lines || 2) * 36) : 24 }))
     : [...card.rows.flatMap(r => r.fields.map(f => ({ key: f.key, label: label(f.key), kind: 'line', max: 24 }))),
        ...(card.message ? [{ key: card.message.key, label: label(card.message.key), kind: 'area', max: 48 }] : [])];
 
@@ -182,16 +199,18 @@
     }
     for (const it of items) {
       const row = document.createElement('div'); row.className = 'row';
-      const lab = document.createElement('label'); lab.textContent = card.langs ? label(it.key) : it.label; row.appendChild(lab);
+      const lab = document.createElement('label'); lab.textContent = card.langs ? label(it.key) : it.label;
+      if (card.langs && hint(it.key)) { const h = document.createElement('small'); h.textContent = hint(it.key); h.style.cssText = 'display:block;font-weight:400;opacity:.7'; lab.appendChild(h); }
+      row.appendChild(lab);
       const box = document.createElement('div'); box.className = 'in'; row.appendChild(box);
       if (it.kind === 'choice') {
         box.className = 'in seg';
-        for (const o of it.options) {
-          const b = document.createElement('button'); b.type = 'button'; b.textContent = o;
+        it.options.forEach((o, oi) => {
+          const b = document.createElement('button'); b.type = 'button'; b.textContent = (it.optionLabels || [])[oi] || o;
           if (values[it.key] === o) b.classList.add('on');
           b.onclick = () => { values[it.key] = values[it.key] === o ? '' : o; buildForm(); draw(); };
           box.appendChild(b);
-        }
+        });
       } else {
         const el = document.createElement(it.kind === 'area' ? 'textarea' : 'input');
         if (it.kind !== 'area') el.type = 'text';
